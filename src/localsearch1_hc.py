@@ -4,14 +4,14 @@ from typing import List, Set, Tuple
 from instance import SetCoverInstance, read_instance
 from approximation import greedy_approximation
 
-# Works with producing better results in ./data/test4.in 
 def run_local_search1(instance_path: str, cutoff: int, seed: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
-    """Fast Local Search with guided random swaps."""
+    """Improved Local Search with incremental coverage and targeted swaps."""
     random.seed(seed)
     start_time = time.time()
     instance = read_instance(instance_path)
     print(f"Instance size: {instance.n} elements, {instance.m} subsets")
 
+    # Initialize with greedy solution
     greedy_solution, greedy_cost = greedy_approximation(instance)
     current_solution = greedy_solution.copy()
     current_cost = greedy_cost
@@ -19,112 +19,172 @@ def run_local_search1(instance_path: str, cutoff: int, seed: int) -> Tuple[List[
     best_cost = current_cost
     trace = [(0.0, current_cost)]
 
+    # Precompute subset coverages
     subset_coverages = [set(s) for s in instance.subsets]
+
+    # Maintain coverage count for each element
+    coverage_count = [0] * instance.n
+    for idx in current_solution:
+        for elem in subset_coverages[idx - 1]:
+            coverage_count[elem - 1] += 1
 
     no_improve_limit = 20
     no_improve_count = 0
-    swap_sizes = [2, 3]
-    max_subset_checks = 50  # only look at top 50 candidates to speed up
+    max_subset_checks = 50
+    swap_size = 1  # Start with small swaps
+    max_swap_size = max(2, int(0.1 * len(current_solution)))  # Cap at 10% of solution size
 
+    def get_uncovered_elements():
+        """Return set of uncovered elements based on coverage_count."""
+        return {i + 1 for i, count in enumerate(coverage_count) if count == 0}
 
-    while time.time() - start_time < cutoff and no_improve_count < no_improve_limit:
-        improved = False
+    def update_coverage(solution, add_idx=None, remove_idx=None):
+        """Update coverage_count when adding or removing a subset."""
+        if remove_idx is not None:
+            for elem in subset_coverages[remove_idx - 1]:
+                coverage_count[elem - 1] -= 1
+        if add_idx is not None:
+            for elem in subset_coverages[add_idx - 1]:
+                coverage_count[elem - 1] += 1
 
-        for swap_size in swap_sizes:
-            if len(current_solution) <= swap_size:
-                continue
+    while time.time() - start_time < cutoff:
 
-            # 1. Randomly remove 'swap_size' subsets
-            remove_indices = random.sample(range(len(current_solution)), swap_size)
-            temp_solution = [x for i, x in enumerate(current_solution) if i not in remove_indices]
-            temp_coverage = set().union(*(subset_coverages[i - 1] for i in temp_solution))
+        # Calculate exclusive coverage for each subset in solution
+        exclusive_coverage = []
+        for i, idx in enumerate(current_solution):
+            exclusive_count = sum(1 for elem in subset_coverages[idx - 1] if coverage_count[elem - 1] == 1)
+            exclusive_coverage.append((i, idx, exclusive_count))
 
-            uncovered = instance.universe - temp_coverage
-            if not uncovered:
-                continue
+        # Sort by exclusive coverage (low to high) to prioritize removing less critical subsets
+        exclusive_coverage.sort(key=lambda x: x[2])
 
-            # 2. Look for candidate subsets to cover the uncovered
-            candidates = []
-            checked = 0
-            for j in random.sample(range(1, instance.m + 1), instance.m):
-                if j not in temp_solution:
-                    gain = len(subset_coverages[j - 1] & uncovered)
-                    if gain > 0:
-                        candidates.append((j, gain))
-                        checked += 1
-                        if checked >= max_subset_checks:
-                            break
+        # Try removing subsets with low exclusive coverage
+        remove_count = min(swap_size, len(current_solution))
+        remove_indices = [exclusive_coverage[i][0] for i in range(min(remove_count, len(exclusive_coverage)))]
+        remove_subsets = [exclusive_coverage[i][1] for i in range(min(remove_count, len(exclusive_coverage)))]
 
-            if not candidates:
-                continue
+        # temp solution: list after subsets are removed
+        temp_solution = [x for i, x in enumerate(current_solution) if i not in remove_indices]
+        for idx in remove_subsets:
+            # update coverage after removing the subset
+            update_coverage(temp_solution, remove_idx=idx)
 
-            # 3. Select top few candidates to add
-            candidates.sort(key=lambda x: -x[1])
-            chosen = [x[0] for x in candidates[:swap_size]]
+        # check if removal improve solution
+        uncovered = get_uncovered_elements()
+        if not uncovered and len(temp_solution) < current_cost:
+            # Solution is valid and better
+            current_solution = temp_solution
+            current_cost = len(current_solution)
+            if current_cost < best_cost:
+                best_solution = current_solution.copy()
+                best_cost = current_cost
+                trace.append((time.time() - start_time, best_cost))
+                no_improve_count = 0
+                swap_size = 1  # Reset swap size
+                print(f"Improved solution: cost={current_cost}")
+            continue
 
-            new_solution = temp_solution + chosen
-            new_coverage = set().union(*(subset_coverages[i - 1] for i in new_solution))
+        # Find candidates to cover uncovered elements
+        candidates = []
+        checked = 0
+        for j in random.sample(range(1, instance.m + 1), instance.m):
+            if j not in temp_solution:
+                gain = len(subset_coverages[j - 1] & uncovered)
+                if gain > 0:
+                    candidates.append((j, gain))
+                    checked += 1
+                    if checked >= max_subset_checks:
+                        break
+        
+        # if no candidates subset that is able to cover uncovered elements
+        if not candidates:
+            # Restore coverage and try larger swap
+            for idx in remove_subsets:
+                update_coverage(temp_solution, add_idx=idx)
+            swap_size = min(swap_size + 1, max_swap_size)
+            no_improve_count += 1
+            continue
 
-            if new_coverage == instance.universe and len(new_solution) <= current_cost:
-                current_solution = new_solution
+        # Sort candidates by gain (high to low)
+        candidates.sort(key=lambda x: -x[1])
+        add_count = min(remove_count, len(candidates))
+        chosen = [x[0] for x in candidates[:add_count]]
+
+        # Add chosen subsets
+        new_solution = temp_solution.copy()
+        for idx in chosen:
+            new_solution.append(idx)
+            update_coverage(new_solution, add_idx=idx)
+
+        # Check if new solution is valid
+        uncovered = get_uncovered_elements()
+        if not uncovered and len(new_solution) < current_cost:
+            current_solution = new_solution
+            current_cost = len(new_solution)
+            if current_cost < best_cost:
+                best_solution = current_solution.copy()
+                best_cost = current_cost
+                trace.append((time.time() - start_time, best_cost))
+                no_improve_count = 0
+                swap_size = 1  # Reset swap size
+                print(f"Improved solution: cost={current_cost}")
+        else:
+            # Revert changes
+            for idx in chosen:
+                update_coverage(new_solution, remove_idx=idx)
+            for idx in remove_subsets:
+                update_coverage(new_solution, add_idx=idx)
+            no_improve_count += 1
+            swap_size = min(swap_size + 1, max_swap_size)
+
+        # Periodic greedy re-optimization
+        if no_improve_count % 10 == 0 and no_improve_count > 0:
+            # Remove redundant subsets
+            temp_solution = current_solution.copy()
+            random.shuffle(temp_solution)
+            for idx in temp_solution[:]:
+                update_coverage(temp_solution, remove_idx=idx)
+                # For each subset, removes it and checks if the universe is still covered. If covered, keeps it removed; otherwise, re-adds it.
+                if not get_uncovered_elements():
+                    temp_solution.remove(idx)
+                else:
+                    update_coverage(temp_solution, add_idx=idx)
+            if len(temp_solution) < current_cost:
+                current_solution = temp_solution
                 current_cost = len(current_solution)
                 if current_cost < best_cost:
                     best_solution = current_solution.copy()
                     best_cost = current_cost
                     trace.append((time.time() - start_time, best_cost))
-                improved = True
-                no_improve_count = 0
-                break
+                    no_improve_count = 0
+                    swap_size = 1
+                    print(f"Greedy re-optimization: cost={current_cost}")
 
-        if not improved:
-            no_improve_count += 1
-            # Fast "smart" restart from greedy + random tweak
-            num_changes = random.choice([1, 2])
-
-            # Ensures the greedy_solution has enough subsets to remove num_changes subsets
-            if len(greedy_solution) > num_changes:
-                remove_idx = random.sample(greedy_solution, num_changes)
-                perturbed = [i for i in greedy_solution if i not in remove_idx]
-                new_cov = set().union(*(subset_coverages[i - 1] for i in perturbed))
-                uncovered = instance.universe - new_cov
-
-                for j in range(1, instance.m + 1):
-                    if j not in perturbed and uncovered & subset_coverages[j - 1]:
-                        perturbed.append(j)
-                        new_cov.update(subset_coverages[j - 1])
-                        # if all elements are covered
-                        if new_cov == instance.universe:
+        if no_improve_count >= no_improve_limit:
+            # Perturb solution by restarting from greedy with small random changes by removing 1,2 element
+            temp_solution, _ = greedy_approximation(instance)
+            if len(temp_solution) > 2:
+                remove_count = random.randint(1, 2)
+                temp_solution = random.sample(temp_solution, len(temp_solution) - remove_count)
+                uncovered = get_uncovered_elements()
+                for j in random.sample(range(1, instance.m + 1), instance.m):
+                    if j not in temp_solution and subset_coverages[j - 1] & uncovered:
+                        temp_solution.append(j)
+                        update_coverage(temp_solution, add_idx=j)
+                        uncovered = get_uncovered_elements()
+                        if not uncovered:
                             break
-
-                if len(perturbed) < current_cost:
-                    current_solution = perturbed
+                if len(temp_solution) < current_cost and not get_uncovered_elements():
+                    current_solution = temp_solution
                     current_cost = len(current_solution)
                     no_improve_count = 0
+                    swap_size = 1
+                    print(f"Perturbed solution: cost={current_cost}")
 
         if time.time() - start_time > cutoff - 1:
             print("Approaching cutoff time, stopping search.")
             break
 
+    print(f"Best solution: cost={best_cost}")
     print(f"{time.time() - start_time:.2f} seconds elapsed")
     return best_solution, best_cost, trace
-
-def evaluate_solution(instance: SetCoverInstance, solution: List[int]) -> bool:
-    """Verify if solution covers all elements."""
-    covered = set()
-    for idx in solution:
-        covered.update(instance.subsets[idx])
-    return covered == instance.universe
-
-def generate_random_solution(instance: SetCoverInstance) -> List[int]:
-    """Generate a random valid solution."""
-    solution = []
-    covered = set()
-    remaining = set(range(instance.m))
-    
-    while covered != instance.universe and remaining:
-        idx = random.choice(list(remaining))
-        solution.append(idx)
-        covered.update(instance.subsets[idx])
-        remaining.remove(idx)
-    
-    return solution
