@@ -9,3 +9,11 @@ Run the program from the command line with the following arguments:
 python main.py -inst <instance_file> -alg <algorithm> -time <cutoff_time> -seed <random_seed>
 
 python generate_table.py
+```
+
+## Folder structure
+1. All the algorithms script should be placed under `src`
+2. Create 2 folders under `src`:
+  1. The input data folder should be placed under `src/data`
+  2. The output data folder should be placed under `src/output`
+
