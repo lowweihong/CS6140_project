@@ -39,8 +39,6 @@ def run_local_search1(instance_path: str, cutoff: int, seed: int) -> Tuple[List[
             temp_solution = [x for i, x in enumerate(current_solution) if i not in remove_indices]
             temp_coverage = set().union(*(subset_coverages[i - 1] for i in temp_solution))
 
-            import pdb; pdb.set_trace()
-
             uncovered = instance.universe - temp_coverage
             if not uncovered:
                 continue
