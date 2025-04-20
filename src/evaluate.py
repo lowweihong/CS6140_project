@@ -103,7 +103,7 @@ def plot_sqd(problem_name, sqd_data, colors=None):
     plt.ylabel('Fraction of runs')
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.legend()
-    plt.ylim(0, 1.05)  # Set y-axis limit from 0 to just above 1
+    plt.ylim(0, 1.05)  
     plt.tight_layout()
     plt.savefig(f'sqd_{problem_name}.png', dpi=300)
     plt.show()
@@ -117,6 +117,11 @@ def boxplot_(boxplot_dic):
     plt.show()
 
 def main():
+
+    """
+    Main function to process trace and optimal solution files, evaluate performance,
+    and generate visualizations including a comparison table, boxplots, QRTDs, and SQDs.
+    """
 
     from collections import defaultdict
     trace_dic=defaultdict(list)
@@ -148,6 +153,8 @@ def main():
 
     trace_dic = dict(sorted(trace_dic.items(), key=lambda item: (item[0], item[1][0],item[1][0])))
 
+    ##### generate comparision table ####
+
     write_solution("compre_table", trace_dic)
 
 
@@ -157,7 +164,7 @@ def main():
     boxplot_dic = {k: [item[0] for item in v] for k, v in plot_dic.items() if k in plot_list}
     boxplot_(boxplot_dic)    
     
-    ### # Calculate QRTDs ###
+    #### Calculate QRTDs ###
     q_stars = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
     for key in plot_list:
         times = [entry[0] for entry in plot_dic[key]]
@@ -195,7 +202,7 @@ def main():
         plot_qrtd(key, results, colors=None)
 
 
-        # Calculate SQD
+        #### Calculate SQD ###
         sqd_time_points = [max_time * i / 10 for i in range(1, 11)]  
         sqd_results = {t: [] for t in sqd_time_points}
         
