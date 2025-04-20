@@ -40,10 +40,6 @@ def greedy_approximation(instance: SetCoverInstance) -> Tuple[List[int], int]:
 
 def run_approximation(instance_path: str) -> Tuple[List[int], int, List[Tuple[float, int]]]:
     """Run greedy approximation algorithm with trace."""
-    # start_time = time.time()
+    
     instance = read_instance(instance_path)
-    
-    # Create trace with single entry (greedy is one-shot)
-    # trace = [(0.0, cost)]
-    
     return greedy_approximation(instance)
