@@ -83,8 +83,6 @@ def generate_results_table():
                         'Collection Size': f"{avg_cost:.2f}",
                         'RelErr': f"{avg_rel_err:.2f}"
                     })
-                # import pdb; 
-                # pdb.set_trace()
             else:
                 # For BnB and Approx, just one result
                 sol_file = f"output/{instance_name}_{alg}_600_42.sol"
