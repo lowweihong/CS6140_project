@@ -11,9 +11,21 @@ python main.py -inst <instance_file> -alg <algorithm> -time <cutoff_time> -seed 
 python generate_table.py
 ```
 
-## Folder structure
-1. All the algorithms script should be placed under `src`
-2. Create 2 folders under `src`:
-  1. The input data folder should be placed under `src/data`
-  2. The output data folder should be placed under `src/output`
+## Project Structure
+
+
+Tree structure:
+```
+├──src/
+|    │── main.py                                    # Main file to run all algorithms
+|    │── approximation.py                           # File for greedy approximation algorithm
+|    ├── bnb.py                                     # File for branch and bound algorithm 
+|    ├── localsearch_sa.py                          # File for local search for Simulated Annealing algorithm
+|    ├── localsearch_hc.py                          # File for local search for Hill Climbing algorithm
+|    ├── instance.py                                # File to create set cover instance
+|    ├── generate_table.py                          # File to generate performance table base on .trace file
+|    ├── evaluate.py                                # File to generate QRTD, SQD plots and boxplots
+└──output/                                          # Directory containing all the generated .sol and .trace files
+     ├── *.sol
+     └── *.trace
 
