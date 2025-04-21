@@ -5,7 +5,20 @@ from instance import SetCoverInstance, read_instance
 from approximation import greedy_approximation
 
 def run_local_search(instance_path: str, cutoff: int, seed: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
-    """Improved Local Search with incremental coverage and targeted swaps."""
+    """
+    Runs an improved local search algorithm to solve the Set Cover problem.
+
+    Args:
+        instance_path: Path to the input instance file.
+        cutoff: Maximum running time in seconds.
+        seed: Random seed for reproducibility.
+
+    Returns:
+        A tuple containing:
+            - The best solution found (list of subset indices),
+            - The cost (length) of the best solution,
+            - Trace of (time, cost) for solution updates.
+    """
     random.seed(seed)
     start_time = time.time()
     instance = read_instance(instance_path)
@@ -35,11 +48,21 @@ def run_local_search(instance_path: str, cutoff: int, seed: int) -> Tuple[List[i
     max_swap_size = max(2, int(0.1 * len(current_solution)))  # Cap at 10% of solution size
 
     def get_uncovered_elements():
-        """Return set of uncovered elements based on coverage_count."""
+        """
+        Returns a set of currently uncovered elements in the universe
+        based on the current `coverage_count`.
+        """
         return {i + 1 for i, count in enumerate(coverage_count) if count == 0}
 
-    def update_coverage(solution, add_idx=None, remove_idx=None):
-        """Update coverage_count when adding or removing a subset."""
+    def update_coverage(add_idx=None, remove_idx=None):
+        """
+        Incrementally updates `coverage_count` when adding or removing subsets.
+
+        Args:
+            solution: Current list of selected subsets.
+            add_idx: Index of subset to add to the solution.
+            remove_idx: Index of subset to remove from the solution.
+        """
         if remove_idx is not None:
             for elem in subset_coverages[remove_idx - 1]:
                 coverage_count[elem - 1] -= 1
@@ -67,7 +90,7 @@ def run_local_search(instance_path: str, cutoff: int, seed: int) -> Tuple[List[i
         temp_solution = [x for i, x in enumerate(current_solution) if i not in remove_indices]
         for idx in remove_subsets:
             # update coverage after removing the subset
-            update_coverage(temp_solution, remove_idx=idx)
+            update_coverage(remove_idx=idx)
 
         # check if removal improve solution
         uncovered = get_uncovered_elements()
@@ -100,7 +123,7 @@ def run_local_search(instance_path: str, cutoff: int, seed: int) -> Tuple[List[i
         if not candidates:
             # Restore coverage and try larger swap
             for idx in remove_subsets:
-                update_coverage(temp_solution, add_idx=idx)
+                update_coverage(add_idx=idx)
             swap_size = min(swap_size + 1, max_swap_size)
             no_improve_count += 1
             continue
@@ -114,7 +137,7 @@ def run_local_search(instance_path: str, cutoff: int, seed: int) -> Tuple[List[i
         new_solution = temp_solution.copy()
         for idx in chosen:
             new_solution.append(idx)
-            update_coverage(new_solution, add_idx=idx)
+            update_coverage(add_idx=idx)
 
         # Check if new solution is valid
         uncovered = get_uncovered_elements()
@@ -131,9 +154,9 @@ def run_local_search(instance_path: str, cutoff: int, seed: int) -> Tuple[List[i
         else:
             # Revert changes
             for idx in chosen:
-                update_coverage(new_solution, remove_idx=idx)
+                update_coverage(remove_idx=idx)
             for idx in remove_subsets:
-                update_coverage(new_solution, add_idx=idx)
+                update_coverage(add_idx=idx)
             no_improve_count += 1
             swap_size = min(swap_size + 1, max_swap_size)
 
@@ -143,12 +166,12 @@ def run_local_search(instance_path: str, cutoff: int, seed: int) -> Tuple[List[i
             temp_solution = current_solution.copy()
             random.shuffle(temp_solution)
             for idx in temp_solution[:]:
-                update_coverage(temp_solution, remove_idx=idx)
+                update_coverage(remove_idx=idx)
                 # For each subset, removes it and checks if the universe is still covered. If covered, keeps it removed; otherwise, re-adds it.
                 if not get_uncovered_elements():
                     temp_solution.remove(idx)
                 else:
-                    update_coverage(temp_solution, add_idx=idx)
+                    update_coverage(add_idx=idx)
             if len(temp_solution) < current_cost:
                 current_solution = temp_solution
                 current_cost = len(current_solution)
@@ -170,7 +193,7 @@ def run_local_search(instance_path: str, cutoff: int, seed: int) -> Tuple[List[i
                 for j in random.sample(range(1, instance.m + 1), instance.m):
                     if j not in temp_solution and subset_coverages[j - 1] & uncovered:
                         temp_solution.append(j)
-                        update_coverage(temp_solution, add_idx=j)
+                        update_coverage(add_idx=j)
                         uncovered = get_uncovered_elements()
                         if not uncovered:
                             break
