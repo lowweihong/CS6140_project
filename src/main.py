@@ -50,10 +50,6 @@ def main():
     # Parse arguments
     args = parse_arguments()
     
-    # Set random seed
-    import random
-    random.seed(args.seed)
-    
     try:
         # Read instance file
         instance_name = args.inst.split('/')[-1].split('.')[0]
