@@ -2,8 +2,9 @@ import argparse
 import sys
 import time
 from typing import List, Set, Tuple
-from localsearch1_hc import run_local_search1
+from localsearch_hc import run_local_search
 from approximation import run_approximation
+from local_sa import run_simulated_annealing
 
 def parse_arguments():
     """Parse command line arguments."""
@@ -69,7 +70,7 @@ def main():
         elif args.alg == 'LS1':
             solution, cost, trace = run_local_search1(args.inst, args.time, args.seed)
         else:  # LS2
-            solution, cost, trace = run_local_search2(args.inst, args.time, args.seed)
+            solution, cost, trace = run_simulated_annealing(args.inst, args.time, args.seed)
             
         # Write solution and trace files
         write_solution(sol_file, solution, cost)

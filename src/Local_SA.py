@@ -2,14 +2,51 @@
 #### Local Search - Simulated Annealing#####
 ############################################
 
-import argparse
+
 import time
 import random
-import os
 import math
-from approximation import solve_approximation
+from instance import read_instance
+from typing import List, Tuple
 
-def solve_Simulated_Annealing(time_limit, seed, universe, subsets, initial_cost, initial_solution):
+
+def solve_approximation(universe, subsets):
+    """
+    Greedy approximation algorithm for the set cover problem.
+
+    Args:
+        universe (set): The set of all elements to be covered.
+        subsets (list of sets): List of subsets available for covering.
+
+    Returns:
+        tuple: (cost, solution) where cost is the number of subsets used, 
+               and solution is a list of indices of selected subsets.
+    """
+    uncovered = universe.copy()
+    solution = []
+
+    while uncovered:
+        best_coverage = 0
+        best_subset = -1
+
+        for i in range(len(subsets)):
+            if i not in solution:
+                coverage = len(uncovered & subsets[i])
+                if coverage > best_coverage:
+                    best_coverage = coverage
+                    best_subset = i
+
+        if best_subset != -1:
+            solution.append(best_subset)
+            uncovered -= subsets[best_subset]
+        else:
+            break
+
+    return len(solution),solution
+
+
+
+def run_simulated_annealing(instance_path: str, cutoff: int, seed: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
     """
     Local Search 2: Simulated Annealing
 
@@ -37,6 +74,10 @@ def solve_Simulated_Annealing(time_limit, seed, universe, subsets, initial_cost,
 
     start_time = time.time()
     trace = []
+    instance = read_instance(instance_path)
+    universe = instance.universe.copy()
+    subsets = instance.subsets.copy()
+    initial_cost, initial_solution = solve_approximation(universe, subsets)
 
     current_solution = set(initial_solution)
     current_cost = initial_cost
@@ -52,9 +93,9 @@ def solve_Simulated_Annealing(time_limit, seed, universe, subsets, initial_cost,
     temp = initial_temp
     max_iterations_at_temp = 10000   
 
-    while time.time() - start_time < time_limit and temp > final_temp:
+    while time.time() - start_time < cutoff and temp > final_temp:
         for _ in range(max_iterations_at_temp):
-            if time.time() - start_time >= time_limit:
+            if time.time() - start_time >= cutoff:
                 break
 
             neighbor = current_solution.copy()
@@ -93,85 +134,4 @@ def solve_Simulated_Annealing(time_limit, seed, universe, subsets, initial_cost,
 
         temp *= alpha       
 
-    return list(best_solution), trace
-
-
-def read_input(filename):
-    """
-    Read the set cover problem from file
-    
-    Args:
-        filename: Path to input file
-        
-    Returns:
-        universe: Set of elements
-        subsets: List of subsets
-    """
-    with open(filename, 'r') as f:
-        lines = f.readlines()
-        
-    n, m = map(int, lines[0].strip().split())
-    universe = set(range(1, n+1))
-    subsets = []
-    
-    for i in range(1, m+1):
-        subset_data = list(map(int, lines[i].strip().split()))        
-        subset = set(subset_data[1:])
-        subsets.append(subset)
-        
-    return universe, subsets
-
-def write_solution(filename, selected_subsets):
-    """
-    Write solution to file
-    
-    Args:
-        filename: Path to output file
-        selected_subsets: List of indices of selected subsets
-    """
-    with open(filename, 'w') as f:
-        f.write(f"{len(selected_subsets)}\n")        
-        subset_indices = ' '.join(str(i+1) for i in sorted(selected_subsets))
-        f.write(f"{subset_indices}\n")
-
-def write_trace(filename, trace):
-    """
-    Write solution trace to file
-    
-    Args:
-        filename: Path to output file
-        trace: List of (time, quality) tuples
-    """
-    with open(filename, 'w') as f:
-        for elapsed, quality in trace:
-            f.write(f"{elapsed:.2f} {quality}\n")
-
-def main():
-    parser = argparse.ArgumentParser(description='Minimum Set Cover Solver')
-    parser.add_argument('-inst', required=False, default="*.in", help='Instance file path')
-    parser.add_argument('-alg', required=False, choices=['BnB', 'Approx', 'HC', 'SA'], default="SA", help='Algorithm to use')
-    parser.add_argument('-time', type=float, required=False, default=60, help='Cutoff time in seconds')
-    parser.add_argument('-seed', type=int, nargs='+', required=False, default=list(range(1, 3)), help='Random seeds')
-    
-    args = parser.parse_args()    
-    file_paths = args.inst
-    cutoff = args.time
-
-    for file_path in file_paths:
-        instance_name = os.path.basename(file_path).split('.')[0]        
-        universe, subsets = read_input(file_path)
-        approx_cost, approx_solution = solve_approximation(universe, subsets)
-
-        if args.alg == 'SA':
-            for seed in args.seed:
-                solution, trace = solve_Simulated_Annealing(cutoff, seed, universe, subsets, approx_cost, approx_solution)
-
-                sol_file = f"{instance_name}_SA_{int(cutoff)}_{seed}.sol"
-                trace_file = f"{instance_name}_SA_{int(cutoff)}_{seed}.trace"
-
-                write_solution(sol_file, solution)
-                write_trace(trace_file, trace)
-   
-
-if __name__ == "__main__":
-    main()
+    return list(best_solution), len(list(best_solution)),  trace
