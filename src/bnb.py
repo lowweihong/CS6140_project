@@ -4,6 +4,17 @@ from instance import SetCoverInstance, read_instance
 from typing import List, Tuple
 
 def greedy_set_cover(universe, sets):
+    """
+    Greedy algorithm to approximate set cover.
+
+    Args:
+        universe (set): The set of all elements to be covered.
+        sets (List[set]): List of subsets that can be used to cover the universe.
+
+    Returns:
+        List[int]: List of indices of the selected subsets.
+    """
+
     uncovered = universe.copy()
     cover = []
     used_indices = set()
@@ -20,7 +31,21 @@ def greedy_set_cover(universe, sets):
         used_indices.add(best_index)
     return cover
 
-def branch_and_bound(instance: SetCoverInstance, cutoff: int) -> Tuple[List[int], int]:
+def branch_and_bound(instance: SetCoverInstance, cutoff: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
+    """
+    Branch and Bound algorithm to solve the Set Cover problem.
+
+    Args:
+        instance (SetCoverInstance): Object containing the universe and subsets.
+        cutoff (int): Time limit in seconds for the algorithm to run.
+
+    Returns:
+        Tuple[List[int], int, List[Tuple[float, int]]]: A tuple containing:
+            1. List of selected subset indices.
+            2. Cost of the solution (number of subsets).
+            3. Trace of (time, cost) for solution updates.
+    """
+
     start_time = time.time()
     best_solution = None
     best_cost = float('inf')
