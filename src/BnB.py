@@ -1,34 +1,8 @@
-#!/usr/bin/env python
-# coding: utf-8
 
-# In[ ]:
-
-
-
-
-
-# In[13]:
-
-
-import os
 import time
 from queue import PriorityQueue
-
-# Set paths for your Mac
-data_dir = "/Users/xiaofengwu/Desktop/Project/data"
-output_dir = "/Users/xiaofengwu/Desktop/Project/output"
-os.makedirs(output_dir, exist_ok=True)
-
-def read_input(filename):
-    with open(filename, 'r') as f:
-        lines = f.readlines()
-    n, m = map(int, lines[0].strip().split())
-    sets = []
-    for line in lines[1:]:
-        parts = list(map(int, line.strip().split()))
-        sets.append(set(parts[1:]))
-    universe = set(range(1, n + 1))
-    return universe, sets
+from instance import SetCoverInstance, read_instance
+from typing import List, Tuple
 
 def greedy_set_cover(universe, sets):
     uncovered = universe.copy()
@@ -47,11 +21,14 @@ def greedy_set_cover(universe, sets):
         used_indices.add(best_index)
     return cover
 
-def branch_and_bound(universe, sets, cutoff):
+def branch_and_bound(instance: SetCoverInstance, cutoff: int) -> Tuple[List[int], int]:
     start_time = time.time()
     best_solution = None
     best_cost = float('inf')
     trace = []
+
+    universe = instance.universe.copy()
+    sets = instance.subsets.copy()
 
     greedy_solution = greedy_set_cover(universe, sets)
     upper_bound = len(greedy_solution)
@@ -109,115 +86,21 @@ def branch_and_bound(universe, sets, cutoff):
 
     return best_solution, best_cost, trace
 
+def run_branch_and_bound(instance_path: str, cutoff: int) -> Tuple[List[int], int]:
+    """"
+    Run greedy approximation algorithm with trace.
 
-# In[15]:
+    Args:
+        instance_path (str): Path to the file containing the set cover instance.
 
-
-cutoff = 900  # 15 minutes
-alg_name = "BnB"
-
-for filename in os.listdir(data_dir):
-    if filename.endswith(".in"):
-        instance = filename[:-3]
-        input_path = os.path.join(data_dir, filename)
-        print(f"Processing {filename} at {time.strftime('%H:%M:%S')}...")
-
-        universe, sets = read_input(input_path)
-        start_time = time.time()
-        solution, cost, trace = branch_and_bound(universe, sets, cutoff)
-        elapsed_time = time.time() - start_time
-
-        sol_path = os.path.join(output_dir, f"{instance}_{alg_name}_{cutoff}.sol")
-        with open(sol_path, 'w') as f:
-            f.write(f"{cost}\n")
-            f.write(' '.join(map(str, sorted(solution))) + '\n')
-
-        trace_path = os.path.join(output_dir, f"{instance}_{alg_name}_{cutoff}.trace")
-        with open(trace_path, 'w') as f:
-            for t, val in trace:
-                f.write(f"{t:.2f} {val}\n")
-
-        print(f"✔ Finished {filename} in {elapsed_time:.2f} seconds\n")
-
-
-# In[39]:
-
-
-import pandas as pd
-import os
-
-def read_output_file(filepath):
-    with open(filepath, 'r') as f:
-        return int(f.readline().strip())
-
-def read_solution_file(filepath):
-    with open(filepath, 'r') as f:
-        lines = f.readlines()
-    return int(lines[0].strip())
-
-def read_trace_time(trace_path):
-    try:
-        with open(trace_path, 'r') as f:
-            lines = [line.strip() for line in f if line.strip()]
-        if len(lines) >= 2:
-            # BnB improved greedy — return time of last update
-            last_line = lines[-1]
-            return round(float(last_line.split()[0]), 6), False
-        elif len(lines) == 1:
-            # Only greedy was used
-            return 0.0, True
-    except:
-        pass
-    return None, None  # If something goes wrong
-
-results = []
-
-for filename in os.listdir(data_dir):
-    if filename.endswith(".out") and (filename.startswith("small") or filename.startswith("large")):
-        instance = filename[:-4]
-        out_path = os.path.join(data_dir, filename)
-        sol_path = os.path.join(output_dir, f"{instance}_{alg_name}_{cutoff}.sol")
-        trace_path = os.path.join(output_dir, f"{instance}_{alg_name}_{cutoff}.trace")
-
-        if not os.path.exists(sol_path):
-            continue
-
-        try:
-            opt = read_output_file(out_path)
-            collection_size = read_solution_file(sol_path)
-            rel_err = round((collection_size - opt) / opt, 4)
-            time_to_best, greedy_only = read_trace_time(trace_path)
-
-            results.append({
-                "Dataset": instance,
-                "collection size": collection_size,
-                "OPT": opt,
-                "RelErr": rel_err,
-                "Time to Best (s)": time_to_best if time_to_best is not None else "N/A",
-                "Used Greedy Only": greedy_only
-            })
-        except:
-            continue
-
-# Sort results nicely
-def sort_key(r):
-    prefix = r["Dataset"][:5]
-    num = int(''.join(filter(str.isdigit, r["Dataset"])))
-    return (prefix, num)
-
-results = sorted(results, key=sort_key)
-df = pd.DataFrame(results)
-
-# Format time for display
-df["Time to Best (s)"] = df["Time to Best (s)"].map(lambda x: f"{x:.6f}" if isinstance(x, float) else x)
-
-display(df)
-
-# Save to CSV
-df.to_csv(os.path.join(output_dir, "bnb_results_summary.csv"), index=False)
-
-
-# In[ ]:
+    Returns:
+        Tuple[List[int], int]: A tuple containing:
+            1. A list of 1-based indices of the subsets selected to cover the universe.
+            2. The number of subsets used (cost of the solution).
+    """
+    
+    instance = read_instance(instance_path)
+    return branch_and_bound(instance, cutoff)
 
 
 
