@@ -5,10 +5,6 @@ from instance import SetCoverInstance, read_instance
 
 
 def greedy_set_cover(universe, sets):
-    """
-    Greedy algorithm to approximate set cover.
-    Returns a list of selected subset indices.
-    """
     uncovered = universe.copy()
     cover = []
     used_indices = set()
@@ -29,9 +25,6 @@ def greedy_set_cover(universe, sets):
 
 
 def branch_and_bound(universe, sets, cutoff):
-    """
-    Core BnB logic that performs priority-based search with greedy upper bound.
-    """
     start_time = time.time()
     best_solution = None
     best_cost = float('inf')
@@ -77,7 +70,6 @@ def branch_and_bound(universe, sets, cutoff):
         i = next(iter(undecided))
         remaining = undecided - {i}
 
-        # Include branch
         new_selected = selected + [i]
         new_covered = covered | sets[i]
         gain = len(sets[i] & (universe - covered))
@@ -87,7 +79,6 @@ def branch_and_bound(universe, sets, cutoff):
         if new_lb < best_cost and new_covered != covered and queue.qsize() < MAX_QUEUE:
             queue.put((priority, new_selected, new_covered, remaining))
 
-        # Exclude branch
         if lb < best_cost and queue.qsize() < MAX_QUEUE:
             queue.put((lb, selected, covered, remaining))
 
@@ -95,9 +86,6 @@ def branch_and_bound(universe, sets, cutoff):
 
 
 def run_branch_and_bound(instance_path: str, cutoff: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
-    """
-    Wrapper for main.py. Loads instance, runs BnB, returns result.
-    """
     instance: SetCoverInstance = read_instance(instance_path)
     solution, cost, trace = branch_and_bound(instance.universe, instance.subsets, cutoff)
     return solution, cost, trace
