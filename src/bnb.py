@@ -2,7 +2,6 @@ import os
 import time
 from queue import PriorityQueue
 
-# Change these if running on a different machine or directory
 data_dir = os.path.join("..", "data")      # ../data
 output_dir = os.path.join("..", "output")  # ../output
 os.makedirs(output_dir, exist_ok=True)
@@ -84,7 +83,6 @@ def branch_and_bound(universe, sets, cutoff):
         i = next(iter(undecided))
         remaining = undecided - {i}
 
-        # Include branch
         new_selected = selected + [i]
         new_covered = covered | sets[i]
         gain = len(sets[i] & (universe - covered))
@@ -94,13 +92,11 @@ def branch_and_bound(universe, sets, cutoff):
         if new_lb < best_cost and new_covered != covered and queue.qsize() < MAX_QUEUE:
             queue.put((priority, new_selected, new_covered, remaining))
 
-        # Exclude branch
         if lb < best_cost and queue.qsize() < MAX_QUEUE:
             queue.put((lb, selected, covered, remaining))
 
     return best_solution, best_cost, trace
 
-# Run the algorithm for all .in files in the data directory
 if __name__ == "__main__":
     cutoff = 900  # seconds
     alg_name = "BnB"
@@ -116,13 +112,11 @@ if __name__ == "__main__":
             solution, cost, trace = branch_and_bound(universe, sets, cutoff)
             elapsed_time = time.time() - start_time
 
-            # Write .sol file
             sol_path = os.path.join(output_dir, f"{instance}_{alg_name}_{cutoff}.sol")
             with open(sol_path, 'w') as f:
                 f.write(f"{cost}\n")
                 f.write(' '.join(map(str, sorted(solution))) + '\n')
 
-            # Write .trace file
             trace_path = os.path.join(output_dir, f"{instance}_{alg_name}_{cutoff}.trace")
             with open(trace_path, 'w') as f:
                 for t, val in trace:
