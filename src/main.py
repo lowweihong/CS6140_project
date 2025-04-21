@@ -41,7 +41,10 @@ def parse_arguments():
 
 def get_output_filename(instance_name: str, algorithm: str, cutoff: int, seed: int, ext: str) -> str:
     """Generate output filename in required format."""
-    return f"{instance_name}_{algorithm}_{cutoff}_{seed}.{ext}"
+    if algorithm == 'Approx' or algorithm == 'BnB':
+        return f"{instance_name}_{algorithm}_{cutoff}.{ext}"
+    else:
+        return f"{instance_name}_{algorithm}_{cutoff}_{seed}.{ext}"
 
 def main():
     # Parse arguments
