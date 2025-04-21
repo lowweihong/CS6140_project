@@ -1,0 +1,4 @@
+src/*.sol
+src/*.trace
+.DS_Store
+*.pyc
