@@ -1,12 +1,17 @@
-import time
-from typing import List, Set, Tuple
+from typing import List, Tuple
 from instance import SetCoverInstance, read_instance
 
 def greedy_approximation(instance: SetCoverInstance) -> Tuple[List[int], int]:
-    """
-    Generate initial solution using greedy approximation.
-    Uses set size heuristic for initial ordering.
-    Returns 1-based indices.
+    """"
+    Greedy approximation algorithm for the set cover problem.
+
+    Args:
+        instance (SetCoverInstance): An instance of the set cover problem containing the universe of elements and a list of subsets.
+
+    Returns:
+        Tuple[List[int], int]: A tuple containing:
+            1. A list of 1-based indices of the selected subsets forming the cover.
+            2. The number of subsets used (cost of the solution).
     """
     solution = []
     covered = set()
@@ -38,8 +43,18 @@ def greedy_approximation(instance: SetCoverInstance) -> Tuple[List[int], int]:
         
     return solution, len(solution)
 
-def run_approximation(instance_path: str) -> Tuple[List[int], int, List[Tuple[float, int]]]:
-    """Run greedy approximation algorithm with trace."""
+def run_approximation(instance_path: str) -> Tuple[List[int], int]:
+    """"
+    Run greedy approximation algorithm with trace.
+
+    Args:
+        instance_path (str): Path to the file containing the set cover instance.
+
+    Returns:
+        Tuple[List[int], int]: A tuple containing:
+            1. A list of 1-based indices of the subsets selected to cover the universe.
+            2. The number of subsets used (cost of the solution).
+    """
     
     instance = read_instance(instance_path)
     return greedy_approximation(instance)
