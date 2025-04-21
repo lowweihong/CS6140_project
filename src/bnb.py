@@ -1,10 +1,21 @@
 import time
 from queue import PriorityQueue
 from typing import List, Tuple
-from instance import SetCoverInstance, read_instance
+from instance import read_instance
 
 
 def greedy_set_cover(universe, sets):
+    """
+    Greedy algorithm to approximate set cover.
+
+    Args:
+        universe (set): The set of all elements to be covered.
+        sets (List[set]): List of subsets that can be used to cover the universe.
+
+    Returns:
+        List[int]: List of indices of the selected subsets.
+    """
+
     uncovered = universe.copy()
     cover = []
     used_indices = set()
@@ -25,6 +36,20 @@ def greedy_set_cover(universe, sets):
 
 
 def branch_and_bound(universe, sets, cutoff):
+    """
+    Branch and Bound algorithm to solve the Set Cover problem.
+
+    Args:
+        instance (SetCoverInstance): Object containing the universe and subsets.
+        cutoff (int): Time limit in seconds for the algorithm to run.
+
+    Returns:
+        Tuple[List[int], int, List[Tuple[float, int]]]: A tuple containing:
+            1. List of selected subset indices.
+            2. Cost of the solution (number of subsets).
+            3. Trace of (time, cost) for solution updates.
+    """
+
     start_time = time.time()
     best_solution = None
     best_cost = float('inf')
@@ -86,6 +111,18 @@ def branch_and_bound(universe, sets, cutoff):
 
 
 def run_branch_and_bound(instance_path: str, cutoff: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
-    instance: SetCoverInstance = read_instance(instance_path)
+    """"
+    Run greedy approximation algorithm with trace.
+
+    Args:
+        instance_path (str): Path to the file containing the set cover instance.
+
+    Returns:
+        Tuple[List[int], int]: A tuple containing:
+            1. A list of 1-based indices of the subsets selected to cover the universe.
+            2. The number of subsets used (cost of the solution).
+    """
+
+    instance = read_instance(instance_path)
     solution, cost, trace = branch_and_bound(instance.universe, instance.subsets, cutoff)
     return solution, cost, trace
