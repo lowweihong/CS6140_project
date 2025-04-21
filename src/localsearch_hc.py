@@ -1,7 +1,7 @@
 import random
 import time
-from typing import List, Set, Tuple
-from instance import SetCoverInstance, read_instance
+from typing import List, Tuple
+from instance import read_instance
 from approximation import greedy_approximation
 
 def run_hill_climbing(instance_path: str, cutoff: int, seed: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
