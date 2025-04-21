@@ -1,4 +1,3 @@
-
 import time
 from queue import PriorityQueue
 from instance import SetCoverInstance, read_instance
@@ -101,7 +100,3 @@ def run_branch_and_bound(instance_path: str, cutoff: int) -> Tuple[List[int], in
     
     instance = read_instance(instance_path)
     return branch_and_bound(instance, cutoff)
-
-
-
-
