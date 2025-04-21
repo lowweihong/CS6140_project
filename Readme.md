@@ -23,7 +23,6 @@ Tree structure:
 |    ├── localsearch_sa.py                          # File for local search for Simulated Annealing algorithm
 |    ├── localsearch_hc.py                          # File for local search for Hill Climbing algorithm
 |    ├── instance.py                                # File to create set cover instance
-|    ├── generate_sparsity_table.py                 # File to generate sparsity table
 |    ├── generate_table.py                          # File to generate performance table base on .trace file
 |    ├── evaluate.py                                # File to generate QRTD, SQD plots and boxplots
 └──output/                                          # Directory containing all the generated .sol and .trace files
