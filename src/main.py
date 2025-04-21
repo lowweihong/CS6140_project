@@ -5,6 +5,7 @@ from typing import List, Set, Tuple
 from localsearch_hc import run_local_search
 from approximation import run_approximation
 from local_sa import run_simulated_annealing
+from bnb import run_branch_and_bound
 
 def parse_arguments():
     """Parse command line arguments."""
@@ -51,9 +52,6 @@ def main():
     import random
     random.seed(args.seed)
     
-    # Record start time
-    start_time = time.time()
-    
     try:
         # Read instance file
         instance_name = args.inst.split('/')[-1].split('.')[0]
@@ -68,9 +66,12 @@ def main():
         elif args.alg == 'Approx':
             solution, cost = run_approximation(args.inst)
         elif args.alg == 'LS1':
-            solution, cost, trace = run_local_search1(args.inst, args.time, args.seed)
-        else:  # LS2
+            solution, cost, trace = run_local_search(args.inst, args.time, args.seed)
+        elif args.alg == 'LS2':
             solution, cost, trace = run_simulated_annealing(args.inst, args.time, args.seed)
+        else: 
+            raise ValueError("Invalid algorithm specified. Please choose from: BnB, Approx, LS1, LS2.")
+            
             
         # Write solution and trace files
         write_solution(sol_file, solution, cost)
