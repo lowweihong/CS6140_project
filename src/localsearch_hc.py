@@ -4,7 +4,7 @@ from typing import List, Set, Tuple
 from instance import SetCoverInstance, read_instance
 from approximation import greedy_approximation
 
-def run_local_search(instance_path: str, cutoff: int, seed: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
+def run_hill_climbing(instance_path: str, cutoff: int, seed: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
     """
     Runs an improved local search algorithm to solve the Set Cover problem.
 
