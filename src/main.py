@@ -2,9 +2,9 @@ import argparse
 import sys
 import time
 from typing import List, Set, Tuple
-from localsearch_hc import run_local_search
+from localsearch_hc import run_hill_climbing
 from approximation import run_approximation
-from local_sa import run_simulated_annealing
+from localsearch_sa import run_simulated_annealing
 from bnb import run_branch_and_bound
 
 def parse_arguments():
@@ -66,7 +66,7 @@ def main():
         elif args.alg == 'Approx':
             solution, cost = run_approximation(args.inst)
         elif args.alg == 'LS1':
-            solution, cost, trace = run_local_search(args.inst, args.time, args.seed)
+            solution, cost, trace = run_hill_climbing(args.inst, args.time, args.seed)
         elif args.alg == 'LS2':
             solution, cost, trace = run_simulated_annealing(args.inst, args.time, args.seed)
         else: 
