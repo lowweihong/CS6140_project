@@ -1,7 +1,6 @@
 import argparse
 import sys
-import time
-from typing import List, Set, Tuple
+from typing import List, Tuple
 from localsearch_hc import run_hill_climbing
 from approximation import run_approximation
 from localsearch_sa import run_simulated_annealing
