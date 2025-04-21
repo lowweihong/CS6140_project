@@ -1,20 +1,26 @@
+import os
 import time
 from queue import PriorityQueue
-from instance import SetCoverInstance, read_instance
-from typing import List, Tuple
+
+# Change these if running on a different machine or directory
+data_dir = os.path.join("..", "data")      # ../data
+output_dir = os.path.join("..", "output")  # ../output
+os.makedirs(output_dir, exist_ok=True)
+
+def read_input(filename):
+    """Reads a Set Cover instance from a file."""
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+    n, m = map(int, lines[0].strip().split())
+    sets = []
+    for line in lines[1:]:
+        parts = list(map(int, line.strip().split()))
+        sets.append(set(parts[1:]))
+    universe = set(range(1, n + 1))
+    return universe, sets
 
 def greedy_set_cover(universe, sets):
-    """
-    Greedy algorithm to approximate set cover.
-
-    Args:
-        universe (set): The set of all elements to be covered.
-        sets (List[set]): List of subsets that can be used to cover the universe.
-
-    Returns:
-        List[int]: List of indices of the selected subsets.
-    """
-
+    """Greedy algorithm to approximate set cover."""
     uncovered = universe.copy()
     cover = []
     used_indices = set()
@@ -31,28 +37,12 @@ def greedy_set_cover(universe, sets):
         used_indices.add(best_index)
     return cover
 
-def branch_and_bound(instance: SetCoverInstance, cutoff: int) -> Tuple[List[int], int, List[Tuple[float, int]]]:
-    """
-    Branch and Bound algorithm to solve the Set Cover problem.
-
-    Args:
-        instance (SetCoverInstance): Object containing the universe and subsets.
-        cutoff (int): Time limit in seconds for the algorithm to run.
-
-    Returns:
-        Tuple[List[int], int, List[Tuple[float, int]]]: A tuple containing:
-            1. List of selected subset indices.
-            2. Cost of the solution (number of subsets).
-            3. Trace of (time, cost) for solution updates.
-    """
-
+def branch_and_bound(universe, sets, cutoff):
+    """Branch and Bound algorithm for Set Cover."""
     start_time = time.time()
     best_solution = None
     best_cost = float('inf')
     trace = []
-
-    universe = instance.universe.copy()
-    sets = instance.subsets.copy()
 
     greedy_solution = greedy_set_cover(universe, sets)
     upper_bound = len(greedy_solution)
@@ -110,18 +100,32 @@ def branch_and_bound(instance: SetCoverInstance, cutoff: int) -> Tuple[List[int]
 
     return best_solution, best_cost, trace
 
-def run_branch_and_bound(instance_path: str, cutoff: int) -> Tuple[List[int], int]:
-    """"
-    Run greedy approximation algorithm with trace.
+# Run the algorithm for all .in files in the data directory
+if __name__ == "__main__":
+    cutoff = 900  # seconds
+    alg_name = "BnB"
 
-    Args:
-        instance_path (str): Path to the file containing the set cover instance.
+    for filename in os.listdir(data_dir):
+        if filename.endswith(".in"):
+            instance = filename[:-3]
+            input_path = os.path.join(data_dir, filename)
+            print(f"Processing {filename} at {time.strftime('%H:%M:%S')}...")
 
-    Returns:
-        Tuple[List[int], int]: A tuple containing:
-            1. A list of 1-based indices of the subsets selected to cover the universe.
-            2. The number of subsets used (cost of the solution).
-    """
-    
-    instance = read_instance(instance_path)
-    return branch_and_bound(instance, cutoff)
+            universe, sets = read_input(input_path)
+            start_time = time.time()
+            solution, cost, trace = branch_and_bound(universe, sets, cutoff)
+            elapsed_time = time.time() - start_time
+
+            # Write .sol file
+            sol_path = os.path.join(output_dir, f"{instance}_{alg_name}_{cutoff}.sol")
+            with open(sol_path, 'w') as f:
+                f.write(f"{cost}\n")
+                f.write(' '.join(map(str, sorted(solution))) + '\n')
+
+            # Write .trace file
+            trace_path = os.path.join(output_dir, f"{instance}_{alg_name}_{cutoff}.trace")
+            with open(trace_path, 'w') as f:
+                for t, val in trace:
+                    f.write(f"{t:.2f} {val}\n")
+
+            print(f"✔ Finished {filename} in {elapsed_time:.2f} seconds\n")
