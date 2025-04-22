@@ -5,11 +5,10 @@ This Python program solves the Set Cover Problem using various algorithms: Branc
 ## Usage
 Run the program from the command line with the following arguments:
 
-1. To run the algorithm with an instance:
 ```bash
 python main.py -inst <instance_file> -alg <algorithm> -time <cutoff_time> -seed <random_seed>
 ```
-* After running this, you may find the resulting .sol and .trace file on the same directory as the main.py script.
+* After running this, you may find the resulting `.sol` and `.trace` file on the same directory as the main.py script.
 
 
 ## Project Structure
