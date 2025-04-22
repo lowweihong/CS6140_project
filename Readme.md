@@ -7,7 +7,7 @@ This Python program solves the Set Cover Problem using various algorithms:
 4. Local Search 2 (LS2): Simulated Annealing algorithm.
 
 ## Usage
-Run the program from the command line with the following arguments:
+From the `src` directory, run the program from the command line with the following arguments:
 
 ```bash
 python main.py -inst <instance_file> -alg <algorithm> -time <cutoff_time> -seed <random_seed>
