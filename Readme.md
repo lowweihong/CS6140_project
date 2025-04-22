@@ -1,6 +1,10 @@
 # Set Cover Problem Solver
 
-This Python program solves the Set Cover Problem using various algorithms: Branch and Bound (BnB), Approximation (Approx), Local Search 1 (LS1), and Local Search 2 (LS2).
+This Python program solves the Set Cover Problem using various algorithms: 
+1. Branch and Bound (BnB): Branch and bound algorithm.
+2. Approximation (Approx): Greedy approximation algorithm.
+3. Local Search 1 (LS1): Hill Climbing algorithm.
+4. Local Search 2 (LS2): Simulated Annealing algorithm.
 
 ## Usage
 Run the program from the command line with the following arguments:
