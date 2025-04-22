@@ -5,11 +5,12 @@ This Python program solves the Set Cover Problem using various algorithms: Branc
 ## Usage
 Run the program from the command line with the following arguments:
 
+1. To run the algorithm with an instance:
 ```bash
 python main.py -inst <instance_file> -alg <algorithm> -time <cutoff_time> -seed <random_seed>
-
-python generate_table.py
 ```
+* After running this, you may find the resulting .sol and .trace file on the same directory as the main.py script.
+
 
 ## Project Structure
 
@@ -23,7 +24,6 @@ Tree structure:
 |    ├── localsearch_sa.py                          # File for local search for Simulated Annealing algorithm
 |    ├── localsearch_hc.py                          # File for local search for Hill Climbing algorithm
 |    ├── instance.py                                # File to create set cover instance
-|    ├── generate_table.py                          # File to generate performance table base on .trace file
 |    ├── evaluate.py                                # File to generate QRTD, SQD plots and boxplots
 └──output/                                          # Directory containing all the generated .sol and .trace files
      ├── *.sol
